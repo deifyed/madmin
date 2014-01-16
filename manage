@@ -3,15 +3,14 @@
 import sys
 sys.path.append('./src')
 
-# Bash colors for output
-from colors import Color
+from os import linesep
+
 # Plugin handling
 from plugin import Manager as Plugin_Manager
+# Application configuration
 from config import * 
-
-NAME = 'madmin'
-PROMPT = Color.BLUE + '[' + Color.WHITE + NAME + Color.BLUE + '] ' + Color.WHITE
-EXIT = ['exit', 'quit', 'q']
+# meh
+from _getch import _Getch 
 
 plugins = Plugin_Manager()
 
@@ -41,10 +40,31 @@ def parse(line):
         plugins.reload()
     elif data['destination'] == 'config':
         print(eval(data['cmd']))
+    elif data['destination'] == '?':
+        plugins.listPlugins()
     else:
-        plugins.parse(data) 
+        if not plugins.parse(data):
+            print()
 
     return 1
     
+getch = _Getch()
+buff = ''
+RUNNING = 1
 
-while parse(input(PROMPT)): pass
+print(PROMPT, end='')
+sys.stdout.flush()
+# Main loop
+while RUNNING:
+    ch = getch()
+    # If user pressed enter, validate stuff
+    if ch == '\r':
+        RUNNING = parse(buff)
+        buff = ''
+        print(PROMPT, end='')
+        sys.stdout.flush()
+    else:
+        sys.stdout.write(ch)
+        sys.stdout.flush()
+
+        buff += ch
